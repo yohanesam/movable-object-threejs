@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Movable Object - Three JS</title>
+		<style>
+			body {
+				color: #000;
+				font-family:Monospace;
+				font-size:13px;
+				text-align:center;
+				font-weight: bold;
+
+				background-color: #fff;
+				margin: 0px;
+				overflow: hidden;
+			}
+
+			#info {
+				color:#000;
+				position: absolute;
+				top: 0px; width: 100%;
+				padding: 5px;
+
+			}
+
+			a {
+				color: red;
+			}
+		</style>
+	</head>
+	<body>
+		<script src="js/three.js"></script>
+		<script src="js/OrbitControls.js"></script>
+		<script src="js/DragControls.js"></script>
+		<script src="js/Detector.js"></script>
+
+		<!-- All Script Goes Here -->
+		<script>
+			if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
+
+			var camera, controls, scene, renderer, dragControls;
+			var objects = [];
+
+			initEnv();
+			animate();
+
+			function initEnv() {
+
+				container = document.createElement( 'div' );
+				document.body.appendChild( container );
+
+
+				//set the camera
+				camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 10000);
+				camera.position.set(400, 200, 0);
+
+
+				//set the control so you can rotating the scene
+				controls = new THREE.OrbitControls(camera);
+				controls.enableDamping = true;  // to create an inertia effect when camera is moving. an animation loop is required when either damping or auto-rotation are enabled
+				controls.dampingFactor = 0.25; // set the factor of damping
+
+				controls.screenSpacePanning = false;
+
+				controls.minDistance = 100; // how far the camera will zoom out
+				controls.maxDistance = 500; // how near the camera will zoom in
+
+				controls.maxPolarAngle = Math.PI / 2;
+
+
+				// Create the Scene
+				scene = new THREE.Scene();
+				scene.background = new THREE.Color(0xcccccc);
+				scene.fog = new THREE.FogExp2(0xcccccc, 0.002);
+
+
+				//light effect for the mesh
+				var light = new THREE.DirectionalLight( 0xffffff );
+				light.position.set( 1, 1, 1 );
+				scene.add( light );
+
+				var light = new THREE.DirectionalLight( 0x002288 );
+				light.position.set( - 1, - 1, - 1 );
+				scene.add( light );
+
+				var light = new THREE.AmbientLight( 0x222222 );
+				scene.add( light );
+
+
+				// set the movable object
+				var geometry = new THREE.CylinderBufferGeometry( 0, 10, 30, 4, 1 );
+				var material = new THREE.MeshPhongMaterial( { color: 0xffffff, flatShading: true } );
+
+				for ( var i = 0; i < 500; i ++ ) {
+
+					var mesh = new THREE.Mesh( geometry, material );
+					mesh.position.x = Math.random() * 1600 - 800;
+					mesh.position.y = Math.random() * 1600 - 800;
+					mesh.position.z = Math.random() * 1600 - 800;
+					scene.add(mesh);
+					objects.push(mesh);
+
+				}
+
+				console.log(objects);
+
+
+
+				//inisiate the renderer so we can render everything inside scene
+				renderer = new THREE.WebGLRenderer({antialias: true});
+				renderer.setPixelRatio(window.devicePixelRatio);
+				renderer.setSize(window.innerWidth, window.innerHeight);
+				renderer.setClearColor("#2E2B40");
+
+				container.appendChild(renderer.domElement);
+
+
+				//add the drag controller so the item can be drag
+				dragControls = new THREE.DragControls(objects, camera, renderer.domElement);
+				dragControls.addEventListener('dragstart', function ( event ) { controls.enabled = false; }); //when start drag, stop rotate when click
+				dragControls.addEventListener('dragend', function ( event ) { controls.enabled = true; }); // enable rotate click when drag event end
+
+
+
+				//set event listener for resizing the scene
+				window.addEventListener('resize', function() {
+					var WIDTH = window.innerWidth,
+			            HEIGHT = window.innerHeight;
+			        renderer.setSize(WIDTH, HEIGHT);
+			        camera.aspect = WIDTH / HEIGHT;
+			        camera.updateProjectionMatrix();
+				});
+			}
+
+			function animate() {
+
+				requestAnimationFrame( animate );
+
+				controls.update();  //only required if controls.enableDamping = true, or if controls.autoRotate = true
+
+				render();
+
+			}
+
+			function render() {
+
+				renderer.render( scene, camera );
+
+			}
+		</script>
+	</body>
+</html>
